@@ -615,11 +615,11 @@ function renderWeightSection(wkg, recs) {
       </td></tr>`;
     }
   }
-
+  const displayWkg = wkg.startsWith('>') ? wkg.replace('>', '') + '+' : wkg;
   return `
   <section class="weight-section">
     <div class="weight-header">
-      <div class="weight-kg">${wkg}<span>ק"ג</span></div>
+      <div class="weight-kg">${displayWkg}<span>ק"ג</span></div>
     </div>
     <table class="records-table">
       <thead>
