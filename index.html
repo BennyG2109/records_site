@@ -462,7 +462,7 @@ function normalizeLift(ds) {
   return 'total'; // fallback for 'Lifting' style = total? adjust as needed
 }
 
-function liftClass(liftKey) { return liftKey; } // snatch / cj / total
+// function liftClass(liftKey) { return liftKey; } // snatch / cj / total
 
 function parseDate(d) {
   if (!d) return '';
@@ -567,7 +567,7 @@ function renderWeightSection(wkg, recs) {
     historyByLift[lt] = his.sort((a,b) => new Date(b.Date)-new Date(a.Date));
   }
 
-  const weightLabel = wkg.startsWith('+') ? wkg + ' ק"ג' : wkg + ' ק"ג';
+  // const weightLabel = wkg.startsWith('+') ? wkg + ' ק"ג' : wkg + ' ק"ג';
 
   let rows = '';
   for (const lt of liftTypes) {
