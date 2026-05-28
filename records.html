@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>שיאי הרמת משקולות ישראל</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --blue:   #0038b8;
+    --blue-d: #002b8a;
+    --blue-l: #dce8ff;
+    --gold:   #c8a84b;
+    --gold-l: #f5edcf;
+    --bg:     #f4f6fb;
+    --surface:#ffffff;
+    --border: #d0d9ef;
+    --text:   #1a1f36;
+    --muted:  #6b7594;
+    --row-alt:#f9fafd;
+    --hist-bg:#f0f4fb;
+    --hist-border:#b8c9ef;
+    --snatch: #1a56c4;
+    --cj:     #b04500;
+    --total:  #1a6b3c;
+    --radius: 10px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Heebo', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    direction: rtl;
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    background: var(--blue);
+    background-image: linear-gradient(135deg, var(--blue-d) 0%, var(--blue) 60%, #1a5ad4 100%);
+    color: #fff;
+    padding: 28px 32px 22px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    box-shadow: 0 4px 18px rgba(0,56,184,0.25);
+    position: relative;
+    overflow: hidden;
+  }
+  .header::after {
+    content:'';
+    position:absolute; inset:0;
+    background: repeating-linear-gradient(
+      -55deg,
+      transparent, transparent 18px,
+      rgba(255,255,255,0.03) 18px, rgba(255,255,255,0.03) 36px
+    );
+    pointer-events:none;
+  }
+  .header-flag {
+    font-size: 52px;
+    line-height: 1;
+    filter: drop-shadow(0 2px 6px rgba(0,0,0,0.25));
+    flex-shrink: 0;
+  }
+  .header-text { flex: 1; }
+  .header-title {
+    font-size: 26px;
+    font-weight: 900;
+    letter-spacing: -0.3px;
+    line-height: 1.15;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.18);
+  }
+  .header-sub {
+    font-size: 13px;
+    opacity: 0.75;
+    margin-top: 3px;
+    font-weight: 300;
+    letter-spacing: 0.4px;
+  }
+
+  /* ── FILTERS ── */
+  .filters {
+    background: var(--surface);
+    border-bottom: 2px solid var(--border);
+    padding: 18px 32px;
+    display: flex;
+    gap: 24px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .filter-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+  }
+  .seg-btns {
+    display: flex;
+    gap: 0;
+    border: 2px solid var(--blue);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .seg-btn {
+    background: var(--surface);
+    color: var(--blue);
+    border: none;
+    padding: 7px 18px;
+    font-family: 'Heebo', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    border-left: 1px solid var(--blue);
+  }
+  .seg-btn:last-child { border-left: none; }
+  .seg-btn.active {
+    background: var(--blue);
+    color: #fff;
+  }
+  .seg-btn:hover:not(.active) { background: var(--blue-l); }
+
+  .season-select {
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    padding: 7px 12px;
+    font-family: 'Heebo', sans-serif;
+    font-size: 14px;
+    color: var(--text);
+    background: var(--surface);
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .season-select:focus { border-color: var(--blue); }
+
+  /* ── MAIN ── */
+  .main {
+    padding: 28px 32px 60px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .loading-wrap {
+    text-align: center;
+    padding: 80px 0;
+    color: var(--muted);
+    font-size: 16px;
+  }
+  .spinner {
+    display: inline-block;
+    width: 36px; height: 36px;
+    border: 3px solid var(--border);
+    border-top-color: var(--blue);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin-bottom: 14px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .error-msg {
+    background: #fff3f3;
+    border: 1px solid #f5b8b8;
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    color: #b00;
+    font-size: 14px;
+    margin-top: 20px;
+  }
+
+  /* ── WEIGHT CLASS SECTION ── */
+  .weight-section {
+    margin-bottom: 32px;
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0,56,184,0.08);
+    border: 1px solid var(--border);
+    animation: fadeIn 0.3s ease;
+  }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
+
+  .weight-header {
+    background: linear-gradient(90deg, var(--blue) 0%, #1a56c4 100%);
+    color: #fff;
+    padding: 13px 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .weight-kg {
+    font-size: 22px;
+    font-weight: 900;
+    letter-spacing: -0.5px;
+  }
+  .weight-kg span { font-size: 14px; font-weight: 400; opacity: 0.75; margin-right: 2px; }
+
+  /* ── RECORDS TABLE ── */
+  .records-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--surface);
+  }
+  .records-table thead tr {
+    background: #eef2fb;
+    border-bottom: 2px solid var(--border);
+  }
+  .records-table thead th {
+    padding: 10px 14px;
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--muted);
+    text-align: right;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+  }
+  .records-table thead th.col-expand { width: 40px; text-align: center; }
+  .records-table thead th.col-lift   { width: 110px; }
+  .records-table thead th.col-result { width: 80px; }
+  .records-table thead th.col-name   { }
+  .records-table thead th.col-club   { }
+  .records-table thead th.col-comp   { }
+  .records-table thead th.col-date   { width: 100px; }
+
+  /* Current record rows */
+  .rec-row {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.12s;
+  }
+  .rec-row:hover { background: #f0f4ff; }
+  .rec-row td {
+    padding: 11px 14px;
+    font-size: 14px;
+    vertical-align: middle;
+  }
+
+  /* Lift type pill */
+  .lift-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-weight: 700;
+    font-size: 13px;
+    padding: 3px 10px;
+    border-radius: 20px;
+  }
+  .lift-pill.snatch { background: #dce8ff; color: var(--snatch); }
+  .lift-pill.cj     { background: #fde8d8; color: var(--cj); }
+  .lift-pill.total  { background: #d4f0e2; color: var(--total); }
+
+  /* Result */
+  .result-val {
+    font-size: 20px;
+    font-weight: 900;
+    letter-spacing: -0.5px;
+  }
+  .result-val.snatch { color: var(--snatch); }
+  .result-val.cj     { color: var(--cj); }
+  .result-val.total  { color: var(--total); }
+  .result-unit { font-size: 11px; font-weight: 400; color: var(--muted); margin-right: 1px; }
+
+  /* Athlete name */
+  .athlete-name { font-weight: 600; }
+
+  /* Date */
+  .rec-date { color: var(--muted); font-size: 13px; }
+
+  /* Expand button */
+  .expand-btn {
+    background: none;
+    border: 2px solid var(--border);
+    border-radius: 50%;
+    width: 26px; height: 26px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--blue);
+    transition: background 0.13s, border-color 0.13s, transform 0.15s;
+    flex-shrink: 0;
+    line-height: 1;
+    padding: 0 0 1px 0;
+  }
+  .expand-btn:hover { background: var(--blue-l); border-color: var(--blue); }
+  .expand-btn.open  { background: var(--blue); color: #fff; border-color: var(--blue); transform: rotate(0deg); }
+  .expand-btn-cell  { text-align: center; }
+
+  /* No record */
+  .no-record td { color: var(--muted); font-size: 13px; font-style: italic; }
+
+  /* ── HISTORY ROWS ── */
+  .hist-container {
+    display: none;
+    background: var(--hist-bg);
+    border-top: 1px dashed var(--hist-border);
+    animation: histIn 0.2s ease;
+  }
+  .hist-container.open { display: table-row-group; }
+  @keyframes histIn { from { opacity:0; } to { opacity:1; } }
+
+  .hist-header-row td {
+    padding: 8px 14px 5px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background: var(--hist-bg);
+    border-bottom: 1px solid var(--hist-border);
+  }
+  .hist-row td {
+    padding: 8px 14px;
+    font-size: 13px;
+    color: #3a4260;
+    border-bottom: 1px dotted #dde4f0;
+    background: var(--hist-bg);
+  }
+  .hist-row:last-child td { border-bottom: none; }
+  .hist-seq {
+    display: inline-block;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: var(--border);
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 700;
+    text-align: center;
+    line-height: 20px;
+  }
+
+  /* empty state */
+  .empty-state {
+    text-align: center;
+    padding: 70px 0 40px;
+    color: var(--muted);
+  }
+  .empty-state .e-icon { font-size: 56px; margin-bottom: 14px; }
+  .empty-state p { font-size: 16px; font-weight: 500; }
+
+  /* ── FOOTER ── */
+  .footer {
+    text-align: center;
+    padding: 20px;
+    font-size: 12px;
+    color: var(--muted);
+    border-top: 1px solid var(--border);
+  }
+
+  @media (max-width: 700px) {
+    .header { padding: 16px; }
+    .header-title { font-size: 18px; }
+    .filters { padding: 14px 16px; gap: 14px; }
+    .main { padding: 16px 10px 40px; }
+    .records-table thead th.col-comp,
+    .records-table td.col-comp { display: none; }
+    .records-table thead th.col-club,
+    .records-table td.col-club { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-flag">🏋️</div>
+  <div class="header-text">
+    <div class="header-title">שיאי ישראל – הרמת משקולות אולימפית</div>
+    <div class="header-sub">התאחדות הרמת המשקולות בישראל · Israel Weightlifting Union</div>
+  </div>
+</header>
+
+<div class="filters" id="filters">
+  <div class="filter-group">
+    <span class="filter-label">מגדר</span>
+    <div class="seg-btns" id="genderBtns">
+      <button class="seg-btn active" data-val="1">גברים</button>
+      <button class="seg-btn"        data-val="2">נשים</button>
+    </div>
+  </div>
+  <div class="filter-group">
+    <span class="filter-label">קבוצת גיל</span>
+    <div class="seg-btns" id="ageBtns">
+      <button class="seg-btn active" data-val="U15">U15</button>
+      <button class="seg-btn"        data-val="U17">U17</button>
+      <button class="seg-btn"        data-val="U20">U20</button>
+      <button class="seg-btn"        data-val="U23">U23</button>
+      <button class="seg-btn"        data-val="SR">בוגרים</button>
+    </div>
+  </div>
+  <div class="filter-group" id="seasonGroup" style="display:none">
+    <span class="filter-label">עונה</span>
+    <select class="season-select" id="seasonSelect"></select>
+  </div>
+</div>
+
+<div class="main" id="main">
+  <div class="loading-wrap" id="loader">
+    <div class="spinner"></div><br>טוען נתונים...
+  </div>
+</div>
+
+<footer class="footer" id="footer" style="display:none">
+  נתונים מתוך מערכת ה-LogLig · עודכן לאחרונה: <span id="lastUpdate"></span>
+</footer>
+
+<script>
+// ── CONFIG ──────────────────────────────────────────────────────────
+// Replace with your proxy URL if you set one up, e.g. "/api/records"
+// The season ID is passed as path param. Change 53 to current season.
+const API_URL = seasonId => `https://loglig.com:8443/api/NewUnion/GetWeightLiftingUnionRecords/${seasonId}`;
+const SEASON_ID = 53; // current season – adjust as needed
+
+// DisciplineStyleId: 0=Snatch (הנפה), 1=Clean&Jerk (דחיקה), 2=Total (קרב שניים)
+const LIFT_LABELS = {
+  snatch: 'הנפה',
+  cj:     'דחיקה',
+  total:  'קרב שניים'
+};
+
+// Weight classes per gender (RecordWeight values), ordered ascending
+// We'll derive from data but define expected order:
+const WEIGHT_ORDER_M = ['55','61','67','73','81','89','96','102','109','+109'];
+const WEIGHT_ORDER_F = ['45','49','55','59','64','71','76','81','87','+87'];
+
+// ── STATE ──────────────────────────────────────────────────────────
+let allRecords = [];
+let selectedGender = '1';   // 1=M, 2=F
+let selectedAge    = 'U15';
+let expandedKeys   = new Set(); // "weightKg|liftType" for expanded history
+
+// ── FETCH ──────────────────────────────────────────────────────────
+async function loadData() {
+  try {
+    const res = await fetch(API_URL(SEASON_ID));
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    allRecords = await res.json();
+    if (!Array.isArray(allRecords)) throw new Error('Unexpected response shape');
+    document.getElementById('lastUpdate').textContent = new Date().toLocaleDateString('he-IL');
+    document.getElementById('footer').style.display = '';
+    render();
+  } catch (e) {
+    document.getElementById('loader').innerHTML =
+      `<div class="error-msg">שגיאה בטעינת הנתונים: ${e.message}<br>
+       <small>בדוק שה-API זמין ושה-CORS מוגדר לדומיין זה.</small></div>`;
+  }
+}
+
+// ── HELPERS ────────────────────────────────────────────────────────
+function normalizeLift(ds) {
+  const s = (ds || '').toLowerCase();
+  if (s.includes('snatch'))  return 'snatch';
+  if (s.includes('clean') || s.includes('jerk')) return 'cj';
+  if (s.includes('total'))   return 'total';
+  return 'total'; // fallback for 'Lifting' style = total? adjust as needed
+}
+
+function liftClass(liftKey) { return liftKey; } // snatch / cj / total
+
+function parseDate(d) {
+  if (!d) return '';
+  const dt = new Date(d);
+  if (isNaN(dt)) return d;
+  return dt.toLocaleDateString('he-IL', { year:'numeric', month:'2-digit', day:'2-digit' });
+}
+
+function weightOrder(wkg, genderId) {
+  const list = genderId === '2' ? WEIGHT_ORDER_F : WEIGHT_ORDER_M;
+  const idx = list.indexOf(String(wkg));
+  return idx >= 0 ? idx : 999;
+}
+
+// ── RENDER ─────────────────────────────────────────────────────────
+function render() {
+  const main = document.getElementById('main');
+  document.getElementById('loader').style.display = 'none';
+
+  // Filter to selected gender + age group
+  const ageMap = { 'U15':'U15', 'U17':'U17', 'U20':'U20', 'U23':'U23', 'SR':'SR' };
+  const ageStr = ageMap[selectedAge] || selectedAge;
+
+  const filtered = allRecords.filter(r => {
+    const gMatch = String(r.GenderId) === String(selectedGender);
+    // RecordCategory like "U15-M", "SR-F", "U20-M" etc.
+    const cat = (r.RecordCategory || '');
+    const ageMatch = cat.startsWith(ageStr + '-');
+    return gMatch && ageMatch;
+  });
+
+  // Group by weight class
+  const byWeight = {};
+  for (const r of filtered) {
+    const w = r.RecordWeight || '?';
+    if (!byWeight[w]) byWeight[w] = [];
+    byWeight[w].push(r);
+  }
+
+  const weightKeys = Object.keys(byWeight).sort((a,b) => {
+    const ai = weightOrder(a, selectedGender);
+    const bi = weightOrder(b, selectedGender);
+    if (ai !== bi) return ai - bi;
+    // fallback numeric
+    const an = a.startsWith('+') ? 9999 : parseFloat(a);
+    const bn = b.startsWith('+') ? 9999 : parseFloat(b);
+    return an - bn;
+  });
+
+  if (weightKeys.length === 0) {
+    main.innerHTML = `<div class="empty-state">
+      <div class="e-icon">🏋️</div>
+      <p>אין שיאים רשומים לקטגוריה זו</p></div>`;
+    return;
+  }
+
+  let html = '';
+  for (const w of weightKeys) {
+    const recs = byWeight[w];
+    html += renderWeightSection(w, recs);
+  }
+  main.innerHTML = html;
+
+  // Attach expand listeners
+  main.querySelectorAll('.expand-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const key = this.dataset.key;
+      const histEl = document.getElementById('hist-' + key);
+      if (!histEl) return;
+      const isOpen = expandedKeys.has(key);
+      if (isOpen) {
+        expandedKeys.delete(key);
+        histEl.classList.remove('open');
+        this.textContent = '+';
+        this.classList.remove('open');
+      } else {
+        expandedKeys.add(key);
+        histEl.classList.add('open');
+        this.textContent = '−';
+        this.classList.add('open');
+      }
+    });
+  });
+}
+
+function renderWeightSection(wkg, recs) {
+  // Split into current (IsHistory=false) and history (IsHistory=true)
+  const current = recs.filter(r => !r.IsHistory);
+  const history = recs.filter(r => r.IsHistory);
+
+  // For each lift type, find the current record
+  const liftTypes = ['snatch', 'cj', 'total'];
+  const currentByLift = {};
+  const historyByLift = {};
+  for (const lt of liftTypes) {
+    const cur = current.filter(r => normalizeLift(r.DisciplineStyle) === lt);
+    const his = history.filter(r => normalizeLift(r.DisciplineStyle) === lt);
+    // If multiple, pick highest result as "current"
+    currentByLift[lt] = cur.sort((a,b) => parseFloat(b.Result||0)-parseFloat(a.Result||0))[0] || null;
+    // History: sort by date descending
+    historyByLift[lt] = his.sort((a,b) => new Date(b.Date)-new Date(a.Date));
+  }
+
+  const weightLabel = wkg.startsWith('+') ? wkg + ' ק"ג' : wkg + ' ק"ג';
+
+  let rows = '';
+  for (const lt of liftTypes) {
+    const r = currentByLift[lt];
+    const hist = historyByLift[lt];
+    const hasHist = hist.length > 0;
+    const key = sanitizeKey(wkg + '_' + lt);
+    const isExp = expandedKeys.has(key);
+
+    rows += `<tr class="rec-row">
+      <td class="expand-btn-cell">
+        ${hasHist
+          ? `<button class="expand-btn${isExp?' open':''}" data-key="${key}" title="הצג היסטוריה">${isExp?'−':'+'}</button>`
+          : '<span style="color:var(--border);font-size:12px">—</span>'
+        }
+      </td>
+      <td><span class="lift-pill ${lt}">${LIFT_LABELS[lt]}</span></td>
+      <td>${r ? `<span class="result-val ${lt}">${r.Result}</span><span class="result-unit">ק"ג</span>` : '<span style="color:var(--muted);font-size:13px">—</span>'}</td>
+      <td class="athlete-name">${r ? escHtml((r.FirstName||'') + ' ' + (r.LastName||'')) : '—'}</td>
+      <td class="col-club">${r ? escHtml(r.ClubName||'—') : '—'}</td>
+      <td class="col-comp">${r ? escHtml(r.CompetitionName||'—') : '—'}</td>
+      <td class="rec-date">${r ? parseDate(r.Date) : '—'}</td>
+    </tr>`;
+
+    if (hasHist) {
+      rows += `<tr><td colspan="7" style="padding:0">
+        <table class="records-table hist-container${isExp?' open':''}" id="hist-${key}" style="width:100%">
+          <thead class="hist-header-row"><tr>
+            <td></td><td></td><td>תוצאה</td><td>שם ספורטאי/ת</td><td class="col-club">מועדון</td><td class="col-comp">תחרות</td><td>תאריך</td>
+          </tr></thead>
+          <tbody>
+          ${hist.map((h,i) => `
+            <tr class="hist-row">
+              <td><span class="hist-seq">${i+1}</span></td>
+              <td></td>
+              <td>${escHtml(h.Result||'—')} <small style="color:var(--muted)">ק"ג</small></td>
+              <td>${escHtml((h.FirstName||'') + ' ' + (h.LastName||''))}</td>
+              <td class="col-club">${escHtml(h.ClubName||'—')}</td>
+              <td class="col-comp">${escHtml(h.CompetitionName||'—')}</td>
+              <td style="color:var(--muted)">${parseDate(h.Date)}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </td></tr>`;
+    }
+  }
+
+  return `
+  <section class="weight-section">
+    <div class="weight-header">
+      <div class="weight-kg">${wkg}<span>ק"ג</span></div>
+    </div>
+    <table class="records-table">
+      <thead>
+        <tr>
+          <th class="col-expand"></th>
+          <th class="col-lift">תרגיל</th>
+          <th class="col-result">שיא</th>
+          <th class="col-name">שם ספורטאי/ת</th>
+          <th class="col-club">מועדון</th>
+          <th class="col-comp">תחרות</th>
+          <th class="col-date">תאריך</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+  </section>`;
+}
+
+function sanitizeKey(s) {
+  return s.replace(/[^a-zA-Z0-9_\-]/g, '_');
+}
+function escHtml(s) {
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
+
+// ── FILTER CONTROLS ────────────────────────────────────────────────
+document.getElementById('genderBtns').addEventListener('click', e => {
+  const btn = e.target.closest('.seg-btn');
+  if (!btn) return;
+  selectedGender = btn.dataset.val;
+  document.querySelectorAll('#genderBtns .seg-btn').forEach(b => b.classList.toggle('active', b === btn));
+  expandedKeys.clear();
+  render();
+});
+
+document.getElementById('ageBtns').addEventListener('click', e => {
+  const btn = e.target.closest('.seg-btn');
+  if (!btn) return;
+  selectedAge = btn.dataset.val;
+  document.querySelectorAll('#ageBtns .seg-btn').forEach(b => b.classList.toggle('active', b === btn));
+  expandedKeys.clear();
+  render();
+});
+
+// ── INIT ───────────────────────────────────────────────────────────
+loadData();
+</script>
+</body>
+</html>
