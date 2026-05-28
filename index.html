@@ -382,7 +382,7 @@
     <span class="filter-label">מגדר</span>
     <div class="seg-btns" id="genderBtns">
       <button class="seg-btn active" data-val="1">גברים</button>
-      <button class="seg-btn"        data-val="2">נשים</button>
+      <button class="seg-btn"        data-val="0">נשים</button>
     </div>
   </div>
   <div class="filter-group">
@@ -432,7 +432,7 @@ const WEIGHT_ORDER_F = ['45','49','55','59','64','71','76','81','87','+87'];
 
 // ── STATE ──────────────────────────────────────────────────────────
 let allRecords = [];
-let selectedGender = '1';   // 1=M, 2=F
+let selectedGender = '1';   // 1=M, 0=F
 let selectedAge    = 'U15';
 let expandedKeys   = new Set(); // "weightKg|liftType" for expanded history
 
@@ -488,9 +488,9 @@ function render() {
 
   const filtered = allRecords.filter(r => {
     const gMatch = String(r.GenderId) === String(selectedGender);
-    // RecordCategory like "U15-M", "SR-F", "U20-M" etc.
+    // RecordCategory like "U15M", "SR-F", "U20M" etc.
     const cat = (r.RecordCategory || '');
-    const ageMatch = cat.startsWith(ageStr + '-');
+    const ageMatch = cat.startsWith(ageStr + '-') || cat.startsWith(ageStr);
     return gMatch && ageMatch;
   });
 
@@ -502,15 +502,16 @@ function render() {
     byWeight[w].push(r);
   }
 
-  const weightKeys = Object.keys(byWeight).sort((a,b) => {
+  /*const weightKeys = Object.keys(byWeight).sort((a,b) => {
     const ai = weightOrder(a, selectedGender);
     const bi = weightOrder(b, selectedGender);
     if (ai !== bi) return ai - bi;
     // fallback numeric
-    const an = a.startsWith('+') ? 9999 : parseFloat(a);
-    const bn = b.startsWith('+') ? 9999 : parseFloat(b);
+    const an = a.startsWith('>') ? 9999 : parseFloat(a);
+    const bn = b.startsWith('>') ? 9999 : parseFloat(b);
     return an - bn;
-  });
+  });*/
+  const weightKeys = Object.keys(byWeight); //B.G.
 
   if (weightKeys.length === 0) {
     main.innerHTML = `<div class="empty-state">
