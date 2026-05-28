@@ -420,9 +420,9 @@ const SEASON_ID = 53; // current season – adjust as needed
 
 // DisciplineStyleId: 0=Snatch (הנפה), 1=Clean&Jerk (דחיקה), 2=Total (קרב שניים)
 const LIFT_LABELS = {
-  snatch: 'הנפה',
-  cj:     'דחיקה',
-  total:  'קרב שניים'
+  0: 'הנפה',
+  1:     'דחיקה',
+  2:  'קרב שניים'
 };
 
 // Weight classes per gender (RecordWeight values), ordered ascending
@@ -555,12 +555,12 @@ function renderWeightSection(wkg, recs) {
   const history = recs.filter(r => r.IsHistory);
 
   // For each lift type, find the current record
-  const liftTypes = ['snatch', 'cj', 'total'];
+  const liftTypes = [0,1,2];
   const currentByLift = {};
   const historyByLift = {};
   for (const lt of liftTypes) {
-    const cur = current.filter(r => normalizeLift(r.DisciplineStyle) === lt);
-    const his = history.filter(r => normalizeLift(r.DisciplineStyle) === lt);
+    const cur = current.filter(r => normalizeLift(r.DisciplineStyleId) === lt);
+    const his = history.filter(r => normalizeLift(r.DisciplineStyleId) === lt);
     // If multiple, pick highest result as "current"
     currentByLift[lt] = cur.sort((a,b) => parseFloat(b.Result||0)-parseFloat(a.Result||0))[0] || null;
     // History: sort by date descending
