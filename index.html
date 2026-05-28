@@ -480,7 +480,8 @@ function weightOrder(wkg, genderId) {
 // ── RENDER ─────────────────────────────────────────────────────────
 function render() {
   const main = document.getElementById('main');
-  document.getElementById('loader').style.display = 'none';
+  const loader = document.getElementById('loader');
+  if (loader) loader.style.display = 'none';
 
   // Filter to selected gender + age group
   const ageMap = { 'U15':'U15', 'U17':'U17', 'U20':'U20', 'U23':'U23', 'SR':'SR' };
