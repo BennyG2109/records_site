@@ -130,20 +130,6 @@
   }
   .seg-btn:hover:not(.active) { background: var(--blue-l); }
 
-  .season-select {
-    border: 2px solid var(--border);
-    border-radius: 8px;
-    padding: 7px 12px;
-    font-family: 'Heebo', sans-serif;
-    font-size: 14px;
-    color: var(--text);
-    background: var(--surface);
-    cursor: pointer;
-    outline: none;
-    transition: border-color 0.15s;
-  }
-  .season-select:focus { border-color: var(--blue); }
-
   /* ── MAIN ── */
   .main {
     padding: 28px 32px 60px;
@@ -231,7 +217,6 @@
   .records-table thead th.col-comp   { }
   .records-table thead th.col-date   { width: 100px; }
 
-  /* Current record rows */
   .rec-row {
     border-bottom: 1px solid var(--border);
     transition: background 0.12s;
@@ -243,7 +228,6 @@
     vertical-align: middle;
   }
 
-  /* Lift type pill */
   .lift-pill {
     display: inline-flex;
     align-items: center;
@@ -257,7 +241,6 @@
   .lift-pill.cj     { background: #fde8d8; color: var(--cj); }
   .lift-pill.total  { background: #d4f0e2; color: var(--total); }
 
-  /* Result */
   .result-val {
     font-size: 20px;
     font-weight: 900;
@@ -268,13 +251,9 @@
   .result-val.total  { color: var(--total); }
   .result-unit { font-size: 11px; font-weight: 400; color: var(--muted); margin-right: 1px; }
 
-  /* Athlete name */
   .athlete-name { font-weight: 600; }
-
-  /* Date */
   .rec-date { color: var(--muted); font-size: 13px; }
 
-  /* Expand button */
   .expand-btn {
     background: none;
     border: 2px solid var(--border);
@@ -294,7 +273,6 @@
   .expand-btn.open  { background: var(--blue); color: #fff; border-color: var(--blue); transform: rotate(0deg); }
   .expand-btn-cell  { text-align: center; }
 
-  /* No record */
   .no-record td { color: var(--muted); font-size: 13px; font-style: italic; }
 
   /* ── HISTORY ROWS ── */
@@ -337,7 +315,6 @@
     line-height: 20px;
   }
 
-  /* empty state */
   .empty-state {
     text-align: center;
     padding: 70px 0 40px;
@@ -346,7 +323,6 @@
   .empty-state .e-icon { font-size: 56px; margin-bottom: 14px; }
   .empty-state p { font-size: 16px; font-weight: 500; }
 
-  /* ── FOOTER ── */
   .footer {
     text-align: center;
     padding: 20px;
@@ -395,10 +371,6 @@
       <button class="seg-btn"        data-val="SR">בוגרים</button>
     </div>
   </div>
-  <div class="filter-group" id="seasonGroup" style="display:none">
-    <span class="filter-label">עונה</span>
-    <select class="season-select" id="seasonSelect"></select>
-  </div>
 </div>
 
 <div class="main" id="main">
@@ -413,28 +385,21 @@
 
 <script>
 // ── CONFIG ──────────────────────────────────────────────────────────
-// Replace with your proxy URL if you set one up, e.g. "/api/records"
-// The season ID is passed as path param. Change 53 to current season.
 const API_URL = seasonId => `https://loglig.com:8443/api/NewUnion/GetWeightLiftingUnionRecords/${seasonId}`;
-const SEASON_ID = 53; // current season – adjust as needed
+const SEASON_ID = 53; // current season
 
-// DisciplineStyleId: 0=Snatch (הנפה), 1=Clean&Jerk (דחיקה), 2=Total (קרב שניים)
+// DisciplineStyleId: 0=Snatch, 1=Clean&Jerk, 2=Total
 const LIFT_LABELS = {
   0: 'הנפה',
-  1:     'דחיקה',
-  2:  'קרב שניים'
+  1: 'דחיקה',
+  2: 'קרב שניים'
 };
-
-// Weight classes per gender (RecordWeight values), ordered ascending
-// We'll derive from data but define expected order:
-const WEIGHT_ORDER_M = ['55','61','67','73','81','89','96','102','109','+109'];
-const WEIGHT_ORDER_F = ['45','49','55','59','64','71','76','81','87','+87'];
 
 // ── STATE ──────────────────────────────────────────────────────────
 let allRecords = [];
 let selectedGender = '1';   // 1=M, 0=F
-let selectedAge    = 'U15';
-let expandedKeys   = new Set(); // "weightKg|liftType" for expanded history
+let selectedAge    = 'U15'; // U15, U17, U20, U23, SR
+let expandedKeys   = new Set();
 
 // ── FETCH ──────────────────────────────────────────────────────────
 async function loadData() {
@@ -442,7 +407,9 @@ async function loadData() {
     const res = await fetch(API_URL(SEASON_ID));
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     allRecords = await res.json();
+    
     if (!Array.isArray(allRecords)) throw new Error('Unexpected response shape');
+    
     document.getElementById('lastUpdate').textContent = new Date().toLocaleDateString('he-IL');
     document.getElementById('footer').style.display = '';
     render();
@@ -454,16 +421,6 @@ async function loadData() {
 }
 
 // ── HELPERS ────────────────────────────────────────────────────────
-function normalizeLift(ds) {
-  const s = (ds || '').toLowerCase();
-  if (s.includes('snatch'))  return 'snatch';
-  if (s.includes('clean') || s.includes('jerk')) return 'cj';
-  if (s.includes('total'))   return 'total';
-  return 'total'; // fallback for 'Lifting' style = total? adjust as needed
-}
-
-// function liftClass(liftKey) { return liftKey; } // snatch / cj / total
-
 function parseDate(d) {
   if (!d) return '';
   const dt = new Date(d);
@@ -471,30 +428,27 @@ function parseDate(d) {
   return dt.toLocaleDateString('he-IL', { year:'numeric', month:'2-digit', day:'2-digit' });
 }
 
-function weightOrder(wkg, genderId) {
-  const list = genderId === '2' ? WEIGHT_ORDER_F : WEIGHT_ORDER_M;
-  const idx = list.indexOf(String(wkg));
-  return idx >= 0 ? idx : 999;
-}
-
 // ── RENDER ─────────────────────────────────────────────────────────
 function render() {
   const main = document.getElementById('main');
   document.getElementById('loader').style.display = 'none';
 
-  // Filter to selected gender + age group
-  const ageMap = { 'U15':'U15', 'U17':'U17', 'U20':'U20', 'U23':'U23', 'SR':'SR' };
-  const ageStr = ageMap[selectedAge] || selectedAge;
-
   const filtered = allRecords.filter(r => {
+    // התאמת מגדר
     const gMatch = String(r.GenderId) === String(selectedGender);
-    // RecordCategory like "U15M", "SR-F", "U20M" etc.
-    const cat = (r.RecordCategory || '');
-    const ageMatch = cat.startsWith(ageStr + '-') || cat.startsWith(ageStr);
+    
+    // הרכבת הקטגוריה המדויקת לפי הכללים של ה-API
+    const genderSuffix = selectedGender === '1' ? 'M' : 'F';
+    const targetCategory = selectedAge === 'SR' ? `SR-${genderSuffix}` : `${selectedAge}${genderSuffix}`;
+    
+    // התאמת קטגוריה - בדיקה ישירה ומדויקת
+    const currentCat = (r.RecordCategory || '').trim().toUpperCase();
+    const ageMatch = (currentCat === targetCategory);
+    
     return gMatch && ageMatch;
   });
 
-  // Group by weight class
+  // קיבוץ לפי משקל
   const byWeight = {};
   for (const r of filtered) {
     const w = r.RecordWeight || '?';
@@ -502,16 +456,7 @@ function render() {
     byWeight[w].push(r);
   }
 
-  /*const weightKeys = Object.keys(byWeight).sort((a,b) => {
-    const ai = weightOrder(a, selectedGender);
-    const bi = weightOrder(b, selectedGender);
-    if (ai !== bi) return ai - bi;
-    // fallback numeric
-    const an = a.startsWith('>') ? 9999 : parseFloat(a);
-    const bn = b.startsWith('>') ? 9999 : parseFloat(b);
-    return an - bn;
-  });*/
-  const weightKeys = Object.keys(byWeight); //B.G.
+  const weightKeys = Object.keys(byWeight);
 
   if (weightKeys.length === 0) {
     main.innerHTML = `<div class="empty-state">
@@ -527,7 +472,7 @@ function render() {
   }
   main.innerHTML = html;
 
-  // Attach expand listeners
+  // מאזינים לפתיחת היסטוריית שיאים
   main.querySelectorAll('.expand-btn').forEach(btn => {
     btn.addEventListener('click', function() {
       const key = this.dataset.key;
@@ -550,24 +495,21 @@ function render() {
 }
 
 function renderWeightSection(wkg, recs) {
-  // Split into current (IsHistory=false) and history (IsHistory=true)
+  // המרת תצוגת משקל קצה מ- 109< ל- 109+ בתצוגת הכותרת בלבד
+  const displayWkg = wkg.startsWith('>') ? wkg.slice(1) + '+' : wkg;
+
   const current = recs.filter(r => !r.IsHistory);
   const history = recs.filter(r => r.IsHistory);
 
-  // For each lift type, find the current record
   const liftTypes = [0,1,2];
   const currentByLift = {};
   const historyByLift = {};
   for (const lt of liftTypes) {
     const cur = current.filter(r => r.DisciplineStyleId === lt);
     const his = history.filter(r => r.DisciplineStyleId === lt);
-    // If multiple, pick highest result as "current"
     currentByLift[lt] = cur.sort((a,b) => parseFloat(b.Result||0)-parseFloat(a.Result||0))[0] || null;
-    // History: sort by date descending
     historyByLift[lt] = his.sort((a,b) => new Date(b.Date)-new Date(a.Date));
   }
-
-  // const weightLabel = wkg.startsWith('+') ? wkg + ' ק"ג' : wkg + ' ק"ג';
 
   let rows = '';
   for (const lt of liftTypes) {
@@ -618,7 +560,7 @@ function renderWeightSection(wkg, recs) {
   return `
   <section class="weight-section">
     <div class="weight-header">
-      <div class="weight-kg">${wkg}<span>ק"ג</span></div>
+      <div class="weight-kg">${displayWkg}<span>ק"ג</span></div>
     </div>
     <table class="records-table">
       <thead>
