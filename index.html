@@ -388,11 +388,11 @@
   <div class="filter-group">
     <span class="filter-label">קבוצת גיל</span>
     <div class="seg-btns" id="ageBtns">
-      <button class="seg-btn active" data-val="U15">U15</button>
+      <button class="seg-btn" data-val="U15">U15</button>
       <button class="seg-btn"        data-val="U17">U17</button>
       <button class="seg-btn"        data-val="U20">U20</button>
       <button class="seg-btn"        data-val="U23">U23</button>
-      <button class="seg-btn"        data-val="SR">בוגרים</button>
+      <button class="seg-btn active" data-val="SR">בוגרים</button>
     </div>
   </div>
   <div class="filter-group" id="seasonGroup" style="display:none">
@@ -427,13 +427,13 @@ const LIFT_LABELS = {
 
 // Weight classes per gender (RecordWeight values), ordered ascending
 // We'll derive from data but define expected order:
-const WEIGHT_ORDER_M = ['55','61','67','73','81','89','96','102','109','+109'];
-const WEIGHT_ORDER_F = ['45','49','55','59','64','71','76','81','87','+87'];
+// const WEIGHT_ORDER_M = ['55','61','67','73','81','89','96','102','109','+109'];
+// const WEIGHT_ORDER_F = ['45','49','55','59','64','71','76','81','87','+87'];
 
 // ── STATE ──────────────────────────────────────────────────────────
 let allRecords = [];
 let selectedGender = '1';   // 1=M, 0=F
-let selectedAge    = 'U15';
+let selectedAge    = 'SR';
 let expandedKeys   = new Set(); // "weightKg|liftType" for expanded history
 
 // ── FETCH ──────────────────────────────────────────────────────────
