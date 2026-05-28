@@ -559,8 +559,8 @@ function renderWeightSection(wkg, recs) {
   const currentByLift = {};
   const historyByLift = {};
   for (const lt of liftTypes) {
-    const cur = current.filter(r => normalizeLift(r.DisciplineStyleId) === lt);
-    const his = history.filter(r => normalizeLift(r.DisciplineStyleId) === lt);
+    const cur = current.filter(r => r.DisciplineStyleId === lt);
+    const his = history.filter(r => r.DisciplineStyleId === lt);
     // If multiple, pick highest result as "current"
     currentByLift[lt] = cur.sort((a,b) => parseFloat(b.Result||0)-parseFloat(a.Result||0))[0] || null;
     // History: sort by date descending
