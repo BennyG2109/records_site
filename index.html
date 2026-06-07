@@ -523,11 +523,9 @@ function renderWeightSection(wkg, recs) {
     if (hasHist) {
       rows += `<tr><td colspan="7" style="padding:0">
         <table class="records-table hist-container${isExp?' open':''}" id="hist-${key}" style="width:100%">
-          /*
           <thead class="hist-header-row"><tr>
             <td></td><td></td><td>תוצאה</td><td>שם ספורטאי/ת</td><td class="col-club">מועדון</td><td class="col-comp">תחרות</td><td>תאריך</td>
           </tr></thead>
-          */
           <tbody>
           ${hist.map((h,i) => `
             <tr class="hist-row">
