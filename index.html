@@ -37,51 +37,6 @@
     min-height: 100vh;
   }
 
-  /* ── HEADER ── */
-  .header {
-    background: var(--blue);
-    background-image: linear-gradient(135deg, var(--blue-d) 0%, var(--blue) 60%, #1a5ad4 100%);
-    color: #fff;
-    padding: 28px 32px 22px;
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    box-shadow: 0 4px 18px rgba(0,56,184,0.25);
-    position: relative;
-    overflow: hidden;
-  }
-  .header::after {
-    content:'';
-    position:absolute; inset:0;
-    background: repeating-linear-gradient(
-      -55deg,
-      transparent, transparent 18px,
-      rgba(255,255,255,0.03) 18px, rgba(255,255,255,0.03) 36px
-    );
-    pointer-events:none;
-  }
-  .header-flag {
-    font-size: 52px;
-    line-height: 1;
-    filter: drop-shadow(0 2px 6px rgba(0,0,0,0.25));
-    flex-shrink: 0;
-  }
-  .header-text { flex: 1; }
-  .header-title {
-    font-size: 26px;
-    font-weight: 900;
-    letter-spacing: -0.3px;
-    line-height: 1.15;
-    text-shadow: 0 1px 4px rgba(0,0,0,0.18);
-  }
-  .header-sub {
-    font-size: 13px;
-    opacity: 0.75;
-    margin-top: 3px;
-    font-weight: 300;
-    letter-spacing: 0.4px;
-  }
-
   /* ── FILTERS ── */
   .filters {
     background: var(--surface);
@@ -368,7 +323,8 @@
 </style>
 </head>
 <body>
-
+  
+<!--
 <header class="header">
   <div class="header-flag">🏋️</div>
   <div class="header-text">
@@ -376,7 +332,8 @@
     <div class="header-sub">התאחדות הרמת המשקולות בישראל · Israel Weightlifting Union</div>
   </div>
 </header>
-
+-->
+  
 <div class="filters" id="filters">
   <div class="filter-group">
     <span class="filter-label">מגדר</span>
@@ -392,7 +349,7 @@
       <button class="seg-btn"        data-val="U17">U17</button>
       <button class="seg-btn"        data-val="U20">U20</button>
       <button class="seg-btn"        data-val="U23">U23</button>
-      <button class="seg-btn active" data-val="SR">בוגרים</button>
+      <button class="seg-btn active" data-val="SR">SR</button>
     </div>
   </div>
   <div class="filter-group" id="seasonGroup" style="display:none">
@@ -407,9 +364,11 @@
   </div>
 </div>
 
+  <!--
 <footer class="footer" id="footer" style="display:none">
   נתונים מתוך מערכת ה-LogLig · עודכן לאחרונה: <span id="lastUpdate"></span>
 </footer>
+  -->
 
 <script>
 // ── CONFIG ──────────────────────────────────────────────────────────
@@ -424,11 +383,6 @@ const LIFT_LABELS = {
   1:     'דחיקה',
   2:  'קרב שניים'
 };
-
-// Weight classes per gender (RecordWeight values), ordered ascending
-// We'll derive from data but define expected order:
-// const WEIGHT_ORDER_M = ['55','61','67','73','81','89','96','102','109','+109'];
-// const WEIGHT_ORDER_F = ['45','49','55','59','64','71','76','81','87','+87'];
 
 // ── STATE ──────────────────────────────────────────────────────────
 let allRecords = [];
@@ -454,27 +408,11 @@ async function loadData() {
 }
 
 // ── HELPERS ────────────────────────────────────────────────────────
-function normalizeLift(ds) {
-  const s = (ds || '').toLowerCase();
-  if (s.includes('snatch'))  return 'snatch';
-  if (s.includes('clean') || s.includes('jerk')) return 'cj';
-  if (s.includes('total'))   return 'total';
-  return 'total'; // fallback for 'Lifting' style = total? adjust as needed
-}
-
-// function liftClass(liftKey) { return liftKey; } // snatch / cj / total
-
 function parseDate(d) {
   if (!d) return '';
   const dt = new Date(d);
   if (isNaN(dt)) return d;
   return dt.toLocaleDateString('he-IL', { year:'numeric', month:'2-digit', day:'2-digit' });
-}
-
-function weightOrder(wkg, genderId) {
-  const list = genderId === '2' ? WEIGHT_ORDER_F : WEIGHT_ORDER_M;
-  const idx = list.indexOf(String(wkg));
-  return idx >= 0 ? idx : 999;
 }
 
 // ── RENDER ─────────────────────────────────────────────────────────
@@ -502,16 +440,7 @@ function render() {
     if (!byWeight[w]) byWeight[w] = [];
     byWeight[w].push(r);
   }
-
-  /*const weightKeys = Object.keys(byWeight).sort((a,b) => {
-    const ai = weightOrder(a, selectedGender);
-    const bi = weightOrder(b, selectedGender);
-    if (ai !== bi) return ai - bi;
-    // fallback numeric
-    const an = a.startsWith('>') ? 9999 : parseFloat(a);
-    const bn = b.startsWith('>') ? 9999 : parseFloat(b);
-    return an - bn;
-  });*/
+  
   const weightKeys = Object.keys(byWeight); //B.G.
 
   if (weightKeys.length === 0) {
@@ -568,8 +497,6 @@ function renderWeightSection(wkg, recs) {
     historyByLift[lt] = his.sort((a,b) => new Date(b.Date)-new Date(a.Date));
   }
 
-  // const weightLabel = wkg.startsWith('+') ? wkg + ' ק"ג' : wkg + ' ק"ג';
-
   let rows = '';
   for (const lt of liftTypes) {
     const r = currentByLift[lt];
@@ -596,9 +523,11 @@ function renderWeightSection(wkg, recs) {
     if (hasHist) {
       rows += `<tr><td colspan="7" style="padding:0">
         <table class="records-table hist-container${isExp?' open':''}" id="hist-${key}" style="width:100%">
+          /*
           <thead class="hist-header-row"><tr>
             <td></td><td></td><td>תוצאה</td><td>שם ספורטאי/ת</td><td class="col-club">מועדון</td><td class="col-comp">תחרות</td><td>תאריך</td>
           </tr></thead>
+          */
           <tbody>
           ${hist.map((h,i) => `
             <tr class="hist-row">
