@@ -240,13 +240,13 @@
     cursor: pointer;
     display: flex; align-items: center; justify-content: center;
     color: var(--blue);
-    transition: background 0.13s, border-color 0.13s, transform 0.15s;
+    transition: background 0.13s, border-color 0.13s;
     flex-shrink: 0;
     line-height: 1;
-    padding: 0 0 1px 0;
+    padding: 0;
   }
   .expand-btn:hover { background: var(--blue-l); border-color: var(--blue); }
-  .expand-btn.open  { background: var(--blue); color: #fff; border-color: var(--blue); transform: rotate(0deg); }
+  .expand-btn.open  { background: var(--blue); color: #fff; border-color: var(--blue); }
   .expand-btn-cell  { text-align: center; }
 
   /* No record */
@@ -262,16 +262,6 @@
   .hist-container.open { display: table-row-group; }
   @keyframes histIn { from { opacity:0; } to { opacity:1; } }
 
-  .hist-header-row td {
-    padding: 8px 14px 5px;
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    background: var(--hist-bg);
-    border-bottom: 1px solid var(--hist-border);
-  }
   .hist-row td {
     padding: 8px 14px;
     font-size: 13px;
@@ -280,18 +270,6 @@
     background: var(--hist-bg);
   }
   .hist-row:last-child td { border-bottom: none; }
-  .hist-seq {
-    display: inline-block;
-    width: 20px; height: 20px;
-    border-radius: 50%;
-    background: var(--border);
-    color: var(--muted);
-    font-size: 11px;
-    font-weight: 700;
-    text-align: center;
-    line-height: 20px;
-  }
-
   /* empty state */
   .empty-state {
     text-align: center;
@@ -319,6 +297,34 @@
     .records-table td.col-comp { display: none; }
     .records-table thead th.col-club,
     .records-table td.col-club { display: none; }
+    .records-table thead th.col-date,
+    .records-table td.col-date { display: none; }
+    .rotate-hint { display: flex; }
+  }
+
+  /* ── ROTATE HINT (mobile only) ── */
+  .rotate-hint {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    background: #fff8e1;
+    border-bottom: 1px solid #ffe082;
+    padding: 9px 16px;
+    font-size: 13px;
+    color: #7a5800;
+    font-weight: 500;
+  }
+  .rotate-phone {
+    font-size: 22px;
+    display: inline-block;
+    animation: rotatePhone 2.5s ease-in-out infinite;
+    transform-origin: center;
+  }
+  @keyframes rotatePhone {
+    0%   { transform: rotate(0deg); }
+    30%  { transform: rotate(-90deg); }
+    70%  { transform: rotate(-90deg); }
+    100% { transform: rotate(0deg); }
   }
 </style>
 </head>
@@ -334,6 +340,11 @@
 </header>
 -->
   
+<div class="rotate-hint">
+  <span class="rotate-phone">📱</span>
+  סובב את המסך לרוחב לצפייה בפרטים נוספים
+</div>
+
 <div class="filters" id="filters">
   <div class="filter-group">
     <span class="filter-label">מגדר</span>
@@ -397,8 +408,10 @@ async function loadData() {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     allRecords = await res.json();
     if (!Array.isArray(allRecords)) throw new Error('Unexpected response shape');
-    document.getElementById('lastUpdate').textContent = new Date().toLocaleDateString('he-IL');
-    document.getElementById('footer').style.display = '';
+    const lu = document.getElementById('lastUpdate');
+    if (lu) lu.textContent = new Date().toLocaleDateString('he-IL');
+    const ft = document.getElementById('footer');
+    if (ft) ft.style.display = '';
     render();
   } catch (e) {
     document.getElementById('loader').innerHTML =
@@ -505,7 +518,7 @@ function renderWeightSection(wkg, recs) {
     const key = sanitizeKey(wkg + '_' + lt);
     const isExp = expandedKeys.has(key);
 
-    rows += `<tr class="rec-row">
+    rows += `<tbody><tr class="rec-row">
       <td class="expand-btn-cell">
         ${hasHist
           ? `<button class="expand-btn${isExp?' open':''}" data-key="${key}" title="הצג היסטוריה">${isExp?'−':'+'}</button>`
@@ -517,29 +530,22 @@ function renderWeightSection(wkg, recs) {
       <td class="athlete-name">${r ? escHtml((r.FirstName||'') + ' ' + (r.LastName||'')) : '—'}</td>
       <td class="col-club">${r ? escHtml(r.ClubName||'—') : '—'}</td>
       <td class="col-comp">${r ? escHtml(r.CompetitionName||'—') : '—'}</td>
-      <td class="rec-date">${r ? parseDate(r.Date) : '—'}</td>
-    </tr>`;
+      <td class="rec-date col-date">${r ? parseDate(r.Date) : '—'}</td>
+    </tr></tbody>`;
 
     if (hasHist) {
-      rows += `<tr><td colspan="7" style="padding:0">
-        <table class="records-table hist-container${isExp?' open':''}" id="hist-${key}" style="width:100%">
-          <thead class="hist-header-row"><tr>
-            <td></td><td></td><td>תוצאה</td><td>שם ספורטאי/ת</td><td class="col-club">מועדון</td><td class="col-comp">תחרות</td><td>תאריך</td>
-          </tr></thead>
-          <tbody>
-          ${hist.map((h,i) => `
+      rows += `<tbody class="hist-container${isExp?' open':''}" id="hist-${key}">
+          ${hist.map(h => `
             <tr class="hist-row">
-              <td><span class="hist-seq">${i+1}</span></td>
+              <td class="expand-btn-cell"></td>
               <td></td>
               <td>${escHtml(h.Result||'—')} <small style="color:var(--muted)">ק"ג</small></td>
               <td>${escHtml((h.FirstName||'') + ' ' + (h.LastName||''))}</td>
               <td class="col-club">${escHtml(h.ClubName||'—')}</td>
               <td class="col-comp">${escHtml(h.CompetitionName||'—')}</td>
-              <td style="color:var(--muted)">${parseDate(h.Date)}</td>
+              <td class="col-date" style="color:var(--muted)">${parseDate(h.Date)}</td>
             </tr>`).join('')}
-          </tbody>
-        </table>
-      </td></tr>`;
+        </tbody>`;
     }
   }
   const displayWkg = wkg.startsWith('>') ? wkg.replace('>', '') + '+' : wkg;
@@ -560,7 +566,7 @@ function renderWeightSection(wkg, recs) {
           <th class="col-date">תאריך</th>
         </tr>
       </thead>
-      <tbody>${rows}</tbody>
+      ${rows}
     </table>
   </section>`;
 }
